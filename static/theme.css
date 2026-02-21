@@ -1,0 +1,180 @@
+/* Global Theme Colors */
+:root {
+    --bg-primary: #f5f5f5;
+    --color-primary: #667eea;
+    --color-cta: #ff6b6b;
+    --color-accent: #4ecdc4;
+    --color-secondary: #45b7d1;
+    --color-white: #ffffff;
+    --color-text: #333333;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body { 
+    font-family: 'Segoe UI', Tahoma, sans-serif; 
+    color: var(--color-text); 
+    background: var(--bg-primary); 
+}
+
+/* Navbar */
+.navbar { 
+    background: var(--color-white); 
+    padding: 20px 80px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    border: 2px solid #4ecdc4; 
+    position: sticky; 
+    top: 0; 
+    z-index: 100; 
+}
+
+.logo { 
+    font-size: 32px; 
+    font-weight: bold; 
+    color: var(--color-primary); 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+}
+
+.nav-links a { 
+    color: var(--color-primary); 
+    text-decoration: none; 
+    margin: 0 20px; 
+    font-weight: 500; 
+    transition: color 0.3s; 
+}
+
+.nav-links a:hover { 
+    color: var(--color-cta); 
+}
+
+.nav-btn { 
+    background: var(--color-cta); 
+    color: white; 
+    padding: 12px 30px; 
+    border-radius: 25px; 
+    text-decoration: none; 
+    font-weight: 600; 
+    transition: all 0.3s; 
+}
+
+.nav-btn:hover { 
+    background: #8a1319; 
+    transform: translateY(-2px); 
+    border: 2px solid #4ecdc4; 
+}
+
+/* Buttons */
+button, .btn { 
+    background: var(--color-cta); 
+    color: white; 
+    padding: 12px 24px; 
+    border: none; 
+    border-radius: 10px; 
+    cursor: pointer; 
+    margin: 5px; 
+    font-weight: 600; 
+    transition: all 0.3s; 
+}
+
+button:hover, .btn:hover { 
+    transform: translateY(-2px); 
+    border: 2px solid #4ecdc4; 
+}
+
+button:disabled { 
+    background: #ccc; 
+    cursor: not-allowed; 
+    transform: none; 
+}
+
+/* Cards */
+.card, .section { 
+    background:   #E8F4F8; 
+    padding: 35px; 
+    border-radius: 15px; 
+    border: 2px solid #4ecdc4; 
+    margin-bottom: 25px; 
+}
+
+/* Headers */
+h1, h2, h3, h4, h5, h6 { 
+    color: var(--color-primary); 
+}
+
+/* Tables */
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+}
+
+th, td { 
+    padding: 15px; 
+    text-align: left; 
+    border-bottom: 2px solid var(--color-accent); 
+}
+
+th { 
+    background: var(--color-primary); 
+    color: white; 
+    font-weight: 600; 
+}
+
+/* Inputs */
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+input[type="tel"], 
+input[type="file"], 
+select, 
+textarea { 
+    padding: 12px; 
+    margin: 5px; 
+    border-radius: 10px; 
+    border: 2px solid var(--color-accent); 
+    background: #E8F4F8; 
+    color: var(--color-text); 
+}
+
+/* Stats */
+.stat-card { 
+    background: var(--color-secondary); 
+    color: white; 
+    padding: 30px; 
+    border-radius: 15px; 
+    text-align: center; 
+    border: 2px solid #4ecdc4; 
+}
+
+/* Accent Elements */
+.accent-bg { 
+    background: var(--color-accent); 
+}
+
+.primary-bg { 
+    background: var(--color-primary); 
+}
+
+.cta-bg { 
+    background: var(--color-cta); 
+}
+
+/* Footer */
+.footer { 
+    background: var(--color-primary); 
+    color: white; 
+    padding: 60px 80px 30px; 
+}
+
+.footer a { 
+    color: #ccc; 
+    text-decoration: none; 
+    transition: color 0.3s; 
+}
+
+.footer a:hover { 
+    color: var(--color-accent); 
+}

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SignBridge - Sign Language Learning Platform</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='new-theme.css') }}">
+    <style>
+        .hero { background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('/static/land img.png'); background-size: cover; background-position: center; box-shadow: inset 0 0 50px rgba(0,0,0,0.5); }
+        .step-image { width: 120px; height: 120px; object-fit: contain; margin-bottom: 15px; }
+        .theme-toggle { background: none; border: none; font-size: 24px; cursor: pointer; margin-left: 15px; }
+        .profile-icon { width: 35px; height: 35px; border-radius: 50%; background: #4CAF50; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-left: 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo"><img src="/static/logo.png" alt="Logo"> SignBridge</div>
+        <div class="nav-links">
+            {% if logged_in %}
+            <a href="/dashboard">Dashboard</a>
+            <a href="/home">Videos</a>
+            <a href="/learning">Learn</a>
+            <a href="/alert">AI Alert</a>
+            <a href="/contact">Contact Us</a>
+            <a href="/logout" class="nav-btn">Logout</a>
+            {% else %}
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#testimonials">Testimonials</a>
+            <a href="/alert">AI Alert</a>
+            <a href="/contact">Contact Us</a>
+            <a href="/login" class="nav-btn">Get Started</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Empowering Communication Through Sign Language</h1>
+        <p>Interactive learning platform for deaf and dumb students</p>
+        {% if logged_in %}
+        <div class="cta-buttons">
+            <a href="/dashboard" class="btn-primary">Go to Dashboard</a>
+            <a href="/learning" class="btn-secondary">Start Learning</a>
+        </div>
+        {% else %}
+        <div class="cta-buttons">
+            <a href="/signup" class="btn-primary">Start Free Today</a>
+            <a href="/login" class="btn-secondary">Sign In</a>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <h2 class="section-title">Why Choose SignBridge?</h2>
+        <div class="features-grid">
+            <div class="feature-box">
+                <h3>Interactive Learning</h3>
+                <p>Learn alphabet, numbers, and daily phrases with high-quality video demonstrations</p>
+            </div>
+            <div class="feature-box">
+                <h3>Practice & Quiz</h3>
+                <p>Test your knowledge with interactive quizzes and speed challenges</p>
+            </div>
+            <div class="feature-box">
+                <h3>Progress Tracking</h3>
+                <p>Monitor your learning journey with detailed analytics and reports</p>
+            </div>
+            <div class="feature-box">
+                <h3>Teacher Support</h3>
+                <p>Teachers can upload custom videos and create assignments</p>
+            </div>
+            <div class="feature-box">
+                <h3>Parent Monitoring</h3>
+                <p>Parents can track their children's progress in real-time</p>
+            </div>
+            <div class="feature-box">
+                <h3>Video Library</h3>
+                <p>Access extensive library of sign language videos</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="stats-grid">
+            <div class="stat-box">
+                <h2>500+</h2>
+                <p>Sign Language Videos</p>
+            </div>
+            <div class="stat-box">
+                <h2>1000+</h2>
+                <p>Active Students</p>
+            </div>
+            <div class="stat-box">
+                <h2>50+</h2>
+                <p>Expert Teachers</p>
+            </div>
+            <div class="stat-box">
+                <h2>95%</h2>
+                <p>Success Rate</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <h2 class="section-title">How It Works</h2>
+        <div class="steps">
+            <div class="step">
+                <img src="/static/sign.jpg" alt="Sign Up" class="step-image">
+                <h3>Sign Up</h3>
+                <p>Create your free account as a student, teacher, or parent</p>
+            </div>
+            <div class="step">
+                <img src="/static/startl.jpg" alt="Start Learning" class="step-image">
+                <h3>Start Learning</h3>
+                <p>Access interactive lessons, videos, and practice exercises</p>
+            </div>
+            <div class="step">
+                <img src="/static/track.png" alt="Track Progress" class="step-image">
+                <h3>Track Progress</h3>
+                <p>Monitor your improvement with detailed analytics</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials" id="testimonials">
+        <h2 class="section-title">What Our Users Say</h2>
+        <div class="testimonial-grid">
+            <div class="testimonial">
+                <p class="testimonial-text">"SignBridge has transformed how my child learns sign language. The interactive videos make learning fun and engaging!"</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">S</div>
+                    <div class="author-info">
+                        <h4>Sarah Johnson</h4>
+                        <p>Parent</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial">
+                <p class="testimonial-text">"As a teacher, I love being able to upload custom content and track my students' progress. This platform is a game-changer!"</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">M</div>
+                    <div class="author-info">
+                        <h4>Michael Chen</h4>
+                        <p>Teacher</p>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial">
+                <p class="testimonial-text">"The quizzes and practice exercises helped me master sign language faster than I ever thought possible!"</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">E</div>
+                    <div class="author-info">
+                        <h4>Emily Davis</h4>
+                        <p>Student</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="features" id="contact" style="background: #fff;">
+        <h2 class="section-title">Contact Us</h2>
+        <div style="max-width: 600px; margin: 0 auto; text-align: center;">
+            <p style="font-size: 18px; margin-bottom: 30px;">Get in touch with us for any queries or support</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="padding: 25px; background: #f8f9fa; border-radius: 10px; border: 2px solid #4A5D44;">
+                    <h3 style="color: #70161E; margin-bottom: 15px;">📧 Email</h3>
+                    <p style="font-size: 18px; color: #D96432; font-weight: 600;">suvetha@gmail.com</p>
+                </div>
+                <div style="padding: 25px; background: #f8f9fa; border-radius: 10px; border: 2px solid #4A5D44;">
+                    <h3 style="color: #70161E; margin-bottom: 15px;">📞 Phone</h3>
+                    <p style="font-size: 18px; color: #D96432; font-weight: 600;">6374145856</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <h2>Ready to Start Your Journey?</h2>
+        <p>Join thousands of students learning sign language today</p>
+        {% if logged_in %}
+        <a href="/dashboard" class="btn-primary">Go to Dashboard</a>
+        {% else %}
+        <a href="/signup" class="btn-primary">Get Started Free</a>
+        {% endif %}
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>SignBridge</h3>
+                <p>Empowering communication through sign language education</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <a href="/">Home</a>
+                <a href="/signup">Sign Up</a>
+                <a href="/login">Login</a>
+            </div>
+            <div class="footer-section">
+                <h3>Resources</h3>
+                <a href="/learning">Learning Modules</a>
+                <a href="/home">Video Library</a>
+            </div>
+            <div class="footer-section">
+                <h3>Support</h3>
+                <a href="#">Help Center</a>
+                <a href="#">Contact Us</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 SignBridge. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Chatbot Widget -->
+    <div id="chatbot-widget">
+        <div id="chatbot-icon" onclick="toggleChatbot()">
+            <span>💬</span>
+        </div>
+        <div id="chatbot-window" style="display: none;">
+            <div id="chatbot-header">
+                <span>SignBridge Support</span>
+                <button onclick="toggleChatbot()" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+            <div id="chatbot-messages"></div>
+            <div id="chatbot-input">
+                <input type="text" id="user-message" placeholder="Type your message..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Button -->
+    <button id="feedback-btn" onclick="openFeedback()">📝 Feedback</button>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" style="display: none;">
+        <div id="feedback-content">
+            <span onclick="closeFeedback()" style="float: right; font-size: 28px; cursor: pointer;">&times;</span>
+            <h2>We'd Love Your Feedback!</h2>
+            <form id="feedback-form" onsubmit="submitFeedback(event)">
+                <input type="text" id="feedback-name" placeholder="Your Name" required>
+                <input type="email" id="feedback-email" placeholder="Your Email" required>
+                <textarea id="feedback-message" placeholder="Your Feedback" rows="5" required></textarea>
+                <button type="submit">Submit Feedback</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Thank You Popup -->
+    <div id="thank-you-popup" style="display: none;">
+        <div id="thank-you-content">
+            <h2>✅ Thank You!</h2>
+            <p>Your feedback has been received. We appreciate your input!</p>
+            <button onclick="closeThankYou()">Close</button>
+        </div>
+    </div>
+
+    <style>
+        #chatbot-widget { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
+        #chatbot-icon { width: 60px; height: 60px; background: #D96432; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        #chatbot-window { position: absolute; bottom: 80px; right: 0; width: 350px; height: 450px; background: white; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+        #chatbot-header { background: #D96432; color: white; padding: 15px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        #chatbot-messages { flex: 1; padding: 15px; overflow-y: auto; background: #f9f9f9; }
+        #chatbot-input { display: flex; padding: 10px; border-top: 1px solid #ddd; }
+        #chatbot-input input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-right: 5px; }
+        #chatbot-input button { padding: 10px 20px; background: #D96432; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .message { margin-bottom: 10px; padding: 8px 12px; border-radius: 8px; max-width: 80%; }
+        .user-msg { background: #D96432; color: white; margin-left: auto; text-align: right; }
+        .bot-msg { background: #e0e0e0; color: #333; }
+        #feedback-btn { position: fixed; bottom: 100px; right: 20px; padding: 15px 25px; background: #4A5D44; color: white; border: none; border-radius: 30px; cursor: pointer; font-size: 16px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 999; }
+        #feedback-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1001; display: flex; align-items: center; justify-content: center; }
+        #feedback-content { background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; }
+        #feedback-form input, #feedback-form textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+        #feedback-form button { width: 100%; padding: 12px; background: #D96432; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        #thank-you-popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1002; display: flex; align-items: center; justify-content: center; }
+        #thank-you-content { background: white; padding: 40px; border-radius: 10px; text-align: center; max-width: 400px; }
+        #thank-you-content button { padding: 12px 30px; background: #4A5D44; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px; }
+    </style>
+
+    <script>
+        function toggleChatbot() {
+            const window = document.getElementById('chatbot-window');
+            window.style.display = window.style.display === 'none' ? 'flex' : 'none';
+            if (window.style.display === 'flex' && document.getElementById('chatbot-messages').children.length === 0) {
+                addBotMessage('Hello! How can I help you today?');
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('user-message');
+            const message = input.value.trim();
+            if (!message) return;
+            addUserMessage(message);
+            input.value = '';
+            setTimeout(() => {
+                const response = getBotResponse(message.toLowerCase());
+                addBotMessage(response);
+            }, 500);
+        }
+
+        function addUserMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'message user-msg';
+            div.textContent = text;
+            document.getElementById('chatbot-messages').appendChild(div);
+            scrollToBottom();
+        }
+
+        function addBotMessage(text) {
+            const div = document.createElement('div');
+            div.className = 'message bot-msg';
+            div.textContent = text;
+            document.getElementById('chatbot-messages').appendChild(div);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            const messages = document.getElementById('chatbot-messages');
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function getBotResponse(message) {
+            // Greetings
+            if (message.includes('hello') || message.includes('hi') || message.includes('hey')) {
+                return 'Hello! Welcome to SignBridge. I can help you with information about our platform, features, how to use the website, and more. What would you like to know?';
+            }
+            
+            // How to use website
+            if (message.includes('how to use') || message.includes('how do i use') || message.includes('getting started') || message.includes('start using')) {
+                return '🎯 To use SignBridge: 1) Sign up for free, 2) Choose your role (Student/Teacher/Parent), 3) Access video library and learning modules, 4) Track your progress on the dashboard. Need help with a specific feature?';
+            }
+            
+            // Features
+            if (message.includes('feature') || message.includes('what can') || message.includes('what does')) {
+                return '✨ SignBridge offers: Interactive video lessons, Practice quizzes, Progress tracking, Teacher video uploads, Parent monitoring, 500+ sign language videos, and personalized dashboards!';
+            }
+            
+            // Sign up / Registration
+            if (message.includes('sign up') || message.includes('register') || message.includes('create account') || message.includes('join')) {
+                return '📝 Click "Start Free Today" button on the homepage. Choose your role (Student/Teacher/Parent), fill in your details, and you\'re ready to start learning!';
+            }
+            
+            // Login
+            if (message.includes('login') || message.includes('log in') || message.includes('sign in')) {
+                return '🔐 Click "Get Started" or "Sign In" button, enter your email and password. Forgot password? Use the reset option on the login page.';
+            }
+            
+            // Videos
+            if (message.includes('video') || message.includes('learn') || message.includes('lesson') || message.includes('content')) {
+                return '🎬 We have 500+ sign language videos! Topics include: Alphabets, Numbers, Daily phrases, Emergency phrases. Access them from the "Videos" section after logging in.';
+            }
+            
+            // Dashboard
+            if (message.includes('dashboard') || message.includes('profile') || message.includes('account')) {
+                return '📊 Your dashboard shows: Learning progress, Completed lessons, Quiz scores, Uploaded videos (for teachers), and Student progress (for parents). Access it after logging in!';
+            }
+            
+            // Quiz / Practice
+            if (message.includes('quiz') || message.includes('practice') || message.includes('test') || message.includes('exercise')) {
+                return '🎯 Practice with interactive quizzes! Test your knowledge on alphabets, numbers, and phrases. Track your scores and improve over time. Find them in the "Learn" section.';
+            }
+            
+            // Teacher features
+            if (message.includes('teacher') || message.includes('upload') || message.includes('assignment')) {
+                return '👨‍🏫 Teachers can: Upload custom sign language videos, Create assignments, Track student progress, and manage their class. Sign up as a teacher to access these features!';
+            }
+            
+            // Parent features
+            if (message.includes('parent') || message.includes('monitor') || message.includes('child')) {
+                return '👨‍👩‍👧 Parents can: Monitor their children\'s progress, View learning reports, Track quiz scores, and receive updates. Sign up as a parent to stay connected!';
+            }
+            
+            // Progress tracking
+            if (message.includes('progress') || message.includes('track') || message.includes('report')) {
+                return '📈 Track your learning journey with detailed analytics! View completed lessons, quiz scores, time spent learning, and improvement trends on your dashboard.';
+            }
+            
+            // Pricing
+            if (message.includes('price') || message.includes('cost') || message.includes('free') || message.includes('payment')) {
+                return '💰 SignBridge is FREE for students! We offer institutional pricing for schools. Contact us at support@signbridge.com for more details.';
+            }
+            
+            // Contact / Support
+            if (message.includes('contact') || message.includes('support') || message.includes('help') || message.includes('email') || message.includes('phone')) {
+                return '📞 Contact us: Email: suvetha@gmail.com | Phone: 6374145856. We\'re here to help!';
+            }
+            
+            // Accessibility
+            if (message.includes('deaf') || message.includes('accessibility') || message.includes('disability')) {
+                return '♿ SignBridge is designed for deaf and hard-of-hearing students. All content is visual with sign language videos. We\'re committed to inclusive education!';
+            }
+            
+            // Thank you
+            if (message.includes('thank') || message.includes('thanks')) {
+                return 'You\'re welcome! Happy to help. Feel free to ask if you have more questions! 😊';
+            }
+            
+            // Bye
+            if (message.includes('bye') || message.includes('goodbye')) {
+                return 'Goodbye! Have a great day learning sign language! Feel free to come back anytime. 👋';
+            }
+            
+            // Default response
+            return '🤔 I can help you with: How to use the website, Features, Sign up process, Videos, Dashboard, Quizzes, Teacher/Parent features, Progress tracking, Pricing, and Support. What would you like to know?';
+        }
+
+        function openFeedback() {
+            document.getElementById('feedback-modal').style.display = 'flex';
+        }
+
+        function closeFeedback() {
+            document.getElementById('feedback-modal').style.display = 'none';
+        }
+
+        function submitFeedback(e) {
+            e.preventDefault();
+            const name = document.getElementById('feedback-name').value;
+            const email = document.getElementById('feedback-email').value;
+            const message = document.getElementById('feedback-message').value;
+            
+            fetch('/submit_feedback', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, email, message })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    closeFeedback();
+                    document.getElementById('thank-you-popup').style.display = 'flex';
+                    document.getElementById('feedback-form').reset();
+                }
+            })
+            .catch(err => console.error('Error:', err));
+        }
+
+        function closeThankYou() {
+            document.getElementById('thank-you-popup').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

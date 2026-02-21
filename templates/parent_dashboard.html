@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Parent Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard-theme.css') }}">
+    <style>
+        .alert-section { background: #fff3cd; border: 2px solid #ffc107; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        .alert-item { background: white; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #dc3545; }
+        .alert-item.read { opacity: 0.6; border-left-color: #6c757d; }
+        .alert-item h4 { margin: 0 0 10px 0; color: #dc3545; }
+        .alert-item p { margin: 5px 0; }
+        .map-link { display: inline-block; padding: 8px 15px; background: #D96432; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px; }
+        .map-link:hover { background: #70161E; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1><img src="/static/logo.png" alt="Logo" style="height: 50px; width: auto; vertical-align: middle; margin-right: 10px;">Parent Dashboard - {{ current_user.username }}</h1>
+        <div>
+            <a href="/">Home</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="alert-section">
+            <h2 style="color: #dc3545;">🚨 Emergency Alerts</h2>
+            <div id="alerts-container">
+                <p style="text-align: center; color: #666;">Loading alerts...</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>My Children</h2>
+            {% if students %}
+            <table>
+                <tr><th>Student</th><th>Email</th><th>Total Activities</th><th>Completed</th><th>Avg Score</th><th>AI Risk Status</th><th>Action</th></tr>
+                {% for student in students %}
+                <tr>
+                    <td>{{ student.username }}</td>
+                    <td>{{ student.email }}</td>
+                    <td>{{ student.progress_count }}</td>
+                    <td>{{ student.completed_count }}</td>
+                    <td>{{ student.avg_score }}%</td>
+                    <td>
+                        {% if student.ai_risks %}
+                        <div style="background: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">
+                            <strong>🧠 AI Detected Issues:</strong>
+                            <ul style="margin: 5px 0; padding-left: 20px;">
+                                {% for risk in student.ai_risks %}
+                                <li style="color: #856404;">{{ risk }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% else %}
+                        <span style="color: #28a745;">✅ No Issues</span>
+                        {% endif %}
+                    </td>
+                    <td><a href="/student/{{ student.id }}/progress" class="btn">View Details</a></td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <p style="text-align: center; padding: 20px; color: #666;">No children linked to your account yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function loadAlerts() {
+            fetch('/parent/alerts')
+                .then(res => res.json())
+                .then(alerts => {
+                    const container = document.getElementById('alerts-container');
+                    if (alerts.length === 0) {
+                        container.innerHTML = '<p style="text-align: center; color: #666;">No emergency alerts</p>';
+                        return;
+                    }
+                    container.innerHTML = alerts.map(alert => `
+                        <div class="alert-item ${alert.is_read ? 'read' : ''}">
+                            <h4>⚠️ ${alert.sign} - ${alert.student}</h4>
+                            <p><strong>Time:</strong> ${alert.created_at}</p>
+                            <p><strong>Location:</strong> ${alert.latitude.toFixed(6)}, ${alert.longitude.toFixed(6)}</p>
+                            <a href="https://www.google.com/maps?q=${alert.latitude},${alert.longitude}" target="_blank" class="map-link">📍 View on Map</a>
+                            ${!alert.is_read ? `<button onclick="markRead(${alert.id})" style="margin-left: 10px; padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">Mark as Read</button>` : ''}
+                        </div>
+                    `).join('');
+                });
+        }
+
+        function markRead(alertId) {
+            fetch(`/parent/alerts/${alertId}/read`, { method: 'POST' })
+                .then(res => res.json())
+                .then(() => loadAlerts());
+        }
+
+        loadAlerts();
+        setInterval(loadAlerts, 30000); // Refresh every 30 seconds
+    </script>
+</body>
+</html>

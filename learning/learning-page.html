@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Language Learning Platform</title>
+    <link rel="stylesheet" href="learning-styles.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <h1>Sign Language Learning Platform</h1>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container">
+        <!-- Emergency Alert -->
+        <section class="emergency-section" aria-label="Emergency Alert">
+            <h2>Emergency Alert</h2>
+            <div class="emergency-buttons">
+                <button class="emergency-btn help-btn" data-emergency="help">
+                    <span class="emergency-icon">🆘</span>
+                    <span>Emergency Alert</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Learning Modules Section -->
+        <section class="learning-modules" aria-label="Learning Modules">
+            <h2>Learning Modules</h2>
+            <div class="modules-grid">
+                <!-- Alphabet Module -->
+                <div class="module-card" data-module="alphabet">
+                    <div class="module-icon">🔤</div>
+                    <h3>Alphabet (A-Z)</h3>
+                    <p>Learn sign language alphabet</p>
+                    <button class="module-btn" aria-label="Start Alphabet Module">Start Learning</button>
+                </div>
+
+                <!-- Numbers Module -->
+                <div class="module-card" data-module="numbers">
+                    <div class="module-icon">🔢</div>
+                    <h3>Numbers (0-9)</h3>
+                    <p>Learn to sign numbers</p>
+                    <button class="module-btn" aria-label="Start Numbers Module">Start Learning</button>
+                </div>
+
+                <!-- Daily Phrases Module -->
+                <div class="module-card" data-module="daily">
+                    <div class="module-icon">💬</div>
+                    <h3>Daily Phrases</h3>
+                    <p>Common everyday expressions</p>
+                    <button class="module-btn" aria-label="Start Daily Phrases Module">Start Learning</button>
+                </div>
+
+                <!-- Emergency Phrases Module -->
+                <div class="module-card" data-module="emergency">
+                    <div class="module-icon">⚠️</div>
+                    <h3>Emergency Phrases</h3>
+                    <p>Critical communication phrases</p>
+                    <button class="module-btn" aria-label="Start Emergency Phrases Module">Start Learning</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Practice Mode Section -->
+        <section class="practice-section" aria-label="Practice Mode">
+            <h2>Practice Mode</h2>
+            <div class="practice-container">
+                <div class="practice-card">
+                    <h3>Quiz Mode</h3>
+                    <p>Test your sign language knowledge</p>
+                    <button class="practice-btn" data-practice="quiz">Start Quiz</button>
+                </div>
+                <div class="practice-card">
+                    <h3>Speed Challenge</h3>
+                    <p>Improve your recognition speed</p>
+                    <button class="practice-btn" data-practice="speed">Start Challenge</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Module Modal -->
+    <div id="moduleModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-content">
+            <button class="modal-close" aria-label="Close modal">&times;</button>
+            <h2 id="modalTitle">Module Content</h2>
+            <div id="modalBody" class="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="isl-signs.js"></script>
+    <script src="learning-script.js"></script>
+</body>
+</html>

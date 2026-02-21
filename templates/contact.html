@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Contact Us - SignBridge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='new-theme.css') }}">
+    <style>
+        .contact-container { max-width: 1000px; margin: 40px auto; padding: 20px; }
+        .contact-header { text-align: center; margin-bottom: 50px; }
+        .contact-header h1 { color: #70161E; font-size: 42px; margin-bottom: 15px; }
+        .contact-header p { font-size: 18px; color: #666; }
+        .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-bottom: 50px; }
+        .contact-card { background: white; padding: 40px; border-radius: 15px; text-align: center; border: 2px solid #4A5D44; transition: transform 0.3s; }
+        .contact-card:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        .contact-card h3 { color: #70161E; margin: 20px 0 15px; font-size: 24px; }
+        .contact-card p { color: #D96432; font-size: 18px; font-weight: 600; }
+        .contact-icon { font-size: 48px; }
+        .contact-form { background: white; padding: 40px; border-radius: 15px; border: 2px solid #4A5D44; }
+        .contact-form h2 { color: #70161E; margin-bottom: 30px; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #70161E; font-weight: 600; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 2px solid #4A5D44; border-radius: 8px; font-size: 16px; }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #D96432; }
+        .submit-btn { width: 100%; padding: 15px; background: #D96432; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: 600; cursor: pointer; }
+        .submit-btn:hover { background: #70161E; }
+        .success-message { display: none; padding: 15px; background: #4CAF50; color: white; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><img src="/static/logo.png" alt="Logo"> SignBridge</div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/alert">Alert</a>
+            <a href="/contact">Contact Us</a>
+            <a href="/logout" class="nav-btn">Logout</a>
+        </div>
+    </nav>
+
+    <div class="contact-container">
+        <div class="contact-header">
+            <h1>Get In Touch</h1>
+            <p>We'd love to hear from you! Reach out to us for any queries or support</p>
+        </div>
+
+        <div class="contact-grid">
+            <div class="contact-card">
+                <div class="contact-icon">📧</div>
+                <h3>Email</h3>
+                <p>suvetha@gmail.com</p>
+            </div>
+            
+            <div class="contact-card">
+                <div class="contact-icon">📞</div>
+                <h3>Phone</h3>
+                <p>6374145856</p>
+            </div>
+        </div>
+
+        <div class="contact-form">
+            <h2>Send Us a Message</h2>
+            <div id="successMessage" class="success-message">Thank you! Your message has been sent successfully.</div>
+            
+            <form id="contactForm" onsubmit="submitContact(event)">
+                <div class="form-group">
+                    <label>Your Name</label>
+                    <input type="text" id="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Your Email</label>
+                    <input type="email" id="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input type="text" id="subject" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="message" rows="6" required></textarea>
+                </div>
+                
+                <button type="submit" class="submit-btn">Send Message</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function submitContact(e) {
+            e.preventDefault();
+            
+            const data = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                message: `Subject: ${document.getElementById('subject').value}\n\n${document.getElementById('message').value}`
+            };
+            
+            fetch('/submit_feedback', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    document.getElementById('successMessage').style.display = 'block';
+                    document.getElementById('contactForm').reset();
+                    setTimeout(() => {
+                        document.getElementById('successMessage').style.display = 'none';
+                    }, 5000);
+                }
+            })
+            .catch(err => console.error('Error:', err));
+        }
+    </script>
+</body>
+</html>

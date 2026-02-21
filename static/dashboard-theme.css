@@ -1,0 +1,228 @@
+/* Dashboard Theme - New Color Scheme */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body { 
+    font-family: 'Segoe UI', Tahoma, sans-serif; 
+    background: #F4E1D7; 
+}
+
+.navbar { 
+    background: #70161E; 
+    color: white; 
+    padding: 20px 40px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+    border: 2px solid #4A5D44; 
+}
+
+.navbar h1 { font-size: 26px; }
+
+.navbar a { 
+    color: white; 
+    text-decoration: none; 
+    margin: 0 10px; 
+    padding: 10px 20px; 
+    background: rgba(255,255,255,0.2); 
+    border-radius: 10px; 
+    transition: all 0.3s; 
+    font-weight: 600; 
+}
+
+.navbar a:hover { 
+    background: #D96432; 
+    transform: translateY(-2px); 
+}
+
+.container { 
+    max-width: 1200px; 
+    margin: 40px auto; 
+    padding: 0 20px; 
+}
+
+.card { 
+    background: white; 
+    padding: 35px; 
+    border-radius: 15px; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+    margin-bottom: 25px; 
+    border: 2px solid #4A5D44; 
+}
+
+.card h2 { 
+    color: #70161E; 
+    margin-bottom: 20px; 
+    border-bottom: 3px solid #D9A036; 
+    padding-bottom: 10px; 
+}
+
+.stats { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    gap: 25px; 
+    margin-bottom: 35px; 
+}
+
+.stat-card { 
+    background: #4A5D44; 
+    color: white; 
+    padding: 30px; 
+    border-radius: 15px; 
+    text-align: center; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+}
+
+.stat-card h3 { 
+    font-size: 42px; 
+    margin-bottom: 10px; 
+    color: white; 
+}
+
+.stat-card p { 
+    font-size: 16px; 
+    opacity: 0.95; 
+}
+
+table { 
+    width: 100%; 
+    border-collapse: collapse; 
+}
+
+th, td { 
+    padding: 15px; 
+    text-align: left; 
+    border-bottom: 2px solid #F4E1D7; 
+}
+
+th { 
+    background: #4A5D44; 
+    color: white; 
+    font-weight: 600; 
+}
+
+tr:hover { 
+    background: rgba(217,164,54,0.1); 
+}
+
+.btn, button { 
+    padding: 10px 18px; 
+    background: #D96432; 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    text-decoration: none; 
+    display: inline-block; 
+    transition: all 0.3s; 
+    font-weight: 600; 
+    margin: 5px; 
+}
+
+.btn:hover, button:hover { 
+    transform: translateY(-2px); 
+    background: #70161E; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+}
+
+.btn-danger { background: #dc3545; }
+.btn-success { background: #4A5D44; }
+
+input, select, textarea { 
+    width: 100%; 
+    padding: 10px; 
+    margin: 10px 0; 
+    border: 2px solid #4A5D44; 
+    border-radius: 8px; 
+    font-size: 14px; 
+}
+
+input:focus, select:focus, textarea:focus { 
+    outline: none; 
+    border-color: #D96432; 
+    box-shadow: 0 0 0 3px rgba(217,100,50,0.1); 
+}
+
+label { 
+    display: block; 
+    margin-bottom: 5px; 
+    color: #70161E; 
+    font-weight: 600; 
+}
+
+.modal { 
+    display: none; 
+    position: fixed; 
+    z-index: 1000; 
+    left: 0; 
+    top: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0,0,0,0.5); 
+}
+
+.modal-content { 
+    background: white; 
+    margin: 5% auto; 
+    padding: 30px; 
+    border-radius: 15px; 
+    width: 500px; 
+    border: 2px solid #4A5D44; 
+}
+
+.tabs { 
+    display: flex; 
+    gap: 10px; 
+    margin-bottom: 20px; 
+}
+
+.tab { 
+    padding: 12px 24px; 
+    background: #ddd; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-weight: 600; 
+    transition: all 0.3s; 
+}
+
+.tab:hover { 
+    background: #D9A036; 
+    color: white; 
+}
+
+.tab.active { 
+    background: #D96432; 
+    color: white; 
+}
+
+.log-entry { 
+    padding: 15px; 
+    margin-bottom: 10px; 
+    background: rgba(217,164,54,0.1); 
+    border-left: 4px solid #D9A036; 
+    border-radius: 5px; 
+}
+
+.completed { 
+    color: #4A5D44; 
+    font-weight: 600; 
+}
+
+video { 
+    width: 100%; 
+    max-width: 800px; 
+    height: auto; 
+    border-radius: 10px; 
+    display: block; 
+    margin: 0 auto; 
+    border: 3px solid #D96432; 
+}
+
+.info { 
+    color: #666; 
+    margin-top: 20px; 
+}
+
+.info strong { 
+    color: #70161E; 
+}

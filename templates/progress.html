@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Progress</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard-theme.css') }}">
+    <style>
+        .stats { grid-template-columns: repeat(5, 1fr); }
+        .section-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 12px 24px; background: #ddd; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
+        .tab-btn.active { background: #D96432; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1><img src="/static/logo.png" alt="Logo" style="height: 50px; width: auto; vertical-align: middle; margin-right: 10px;">My Progress - {{ current_user.username }}</h1>
+        <div>
+            <a href="/">Home</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/home">Videos</a>
+            <a href="/learning">Basics</a>
+            <button onclick="showEmergencyAlert()" style="background: #E74C3C; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 0 10px;">🚨 Emergency</button>
+            <a href="/logout">Logout</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <h3>{{ stats.total }}</h3>
+                <p>Total Activities</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.completed }}</h3>
+                <p>Completed</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.avg_score|round|int }}</h3>
+                <p>Average Score</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.quizzes }}</h3>
+                <p>Quizzes Taken</p>
+            </div>
+            <div class="stat-card">
+                <h3>{{ stats.videos_watched }}</h3>
+                <p>Videos Watched</p>
+            </div>
+        </div>
+        
+        <div class="section-tabs">
+            <button class="tab-btn active" onclick="showTab('all')">All Activities</button>
+            <button class="tab-btn" onclick="showTab('quiz')">Quizzes</button>
+            <button class="tab-btn" onclick="showTab('speed')">Speed Challenges</button>
+            <button class="tab-btn" onclick="showTab('videos')">Videos Watched</button>
+        </div>
+        
+        <div id="all-tab" class="card tab-content active">
+            <h2>All Activity History</h2>
+            <table>
+                <tr><th>Module</th><th>Item</th><th>Score</th><th>Status</th><th>Date</th></tr>
+                {% for p in progress %}
+                <tr>
+                    <td>{{ p.module }}</td>
+                    <td>{{ p.item }}</td>
+                    <td>{{ p.score }}%</td>
+                    <td class="{{ 'completed' if p.completed else '' }}">{{ 'Completed' if p.completed else 'In Progress' }}</td>
+                    <td>{{ p.timestamp.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        
+        <div id="quiz-tab" class="card tab-content">
+            <h2>Quiz Results</h2>
+            <table>
+                <tr><th>Quiz</th><th>Score</th><th>Questions</th><th>Date</th></tr>
+                {% for p in progress %}
+                {% if p.module == 'quiz' %}
+                <tr>
+                    <td>{{ p.item }}</td>
+                    <td>{{ p.score }}%</td>
+                    <td>{{ p.completed|string }}</td>
+                    <td>{{ p.timestamp.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </table>
+        </div>
+        
+        <div id="speed-tab" class="card tab-content">
+            <h2>Speed Challenge Results</h2>
+            <table>
+                <tr><th>Challenge</th><th>Score</th><th>Time</th><th>Date</th></tr>
+                {% for p in progress %}
+                {% if p.module == 'speed' %}
+                <tr>
+                    <td>{{ p.item }}</td>
+                    <td>{{ p.score }}/5</td>
+                    <td>{{ p.completed|string }}</td>
+                    <td>{{ p.timestamp.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </table>
+        </div>
+        
+        <div id="videos-tab" class="card tab-content">
+            <h2>Videos Watched</h2>
+            <table>
+                <tr><th>Video</th><th>Category</th><th>Watched</th><th>Date</th></tr>
+                {% for p in progress %}
+                {% if p.module == 'video' %}
+                <tr>
+                    <td>{{ p.item }}</td>
+                    <td>{{ p.score|string }}</td>
+                    <td class="completed">✓ Watched</td>
+                    <td>{{ p.timestamp.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    
+    <div id="emergencyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative;">
+            <button onclick="closeEmergencyModal()" style="position: absolute; top: 10px; right: 10px; background: #E74C3C; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            <div id="emergencyContent"></div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='emergency.js') }}"></script>
+    <script>
+        function showTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').classList.add('active');
+        }
+    </script>
+</body>
+</html>

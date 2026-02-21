@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Emergency Alert - SignBridge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='new-theme.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <style>
+        .alert-container { max-width: 1200px; margin: 40px auto; padding: 20px; }
+        .camera-section { background: white; padding: 40px; border-radius: 15px; margin-bottom: 30px; border: 2px solid #4A5D44; }
+        .video-container { position: relative; width: 100%; max-width: 640px; margin: 0 auto; }
+        #video { width: 100%; border-radius: 10px; border: 3px solid #D96432; display: none; }
+        #canvas { width: 100%; border-radius: 10px; border: 3px solid #D96432; }
+        .controls { margin: 20px 0; text-align: center; }
+        .controls button { padding: 15px 30px; margin: 10px; background: #D96432; color: white; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; }
+        .controls button:hover { background: #70161E; }
+        #result { margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px; font-size: 20px; font-weight: bold; color: #70161E; text-align: center; min-height: 80px; }
+        .alert-active { background: #dc3545 !important; color: white !important; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .progress-bar { width: 100%; height: 30px; background: #e0e0e0; border-radius: 15px; margin-top: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A); transition: width 0.3s; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><img src="/static/logo.png" alt="Logo"> SignBridge</div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            {% if current_user.is_authenticated %}
+            <a href="/dashboard">Dashboard</a>
+            <a href="/logout" class="nav-btn">Logout</a>
+            {% else %}
+            <a href="/login" class="nav-btn">Login</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="alert-container">
+        <h1 style="text-align: center; color: #70161E; margin-bottom: 30px;">AI-Powered Emergency Alert System</h1>
+        
+        <div class="camera-section">
+            <h2 style="color: #70161E; margin-bottom: 20px;">Real-time HELP Gesture Recognition</h2>
+            <p style="margin-bottom: 20px;">Show the HELP sign (see reference below) continuously for 2 seconds. SMS alert will be sent to 6374145856 with your live location.</p>
+            
+            <div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 20px;">
+                <div>
+                    <img src="/static/cnn.png" alt="HELP Reference" style="width: 200px; border: 3px solid #D96432; border-radius: 10px;">
+                    <p style="text-align: center; font-weight: bold; color: #70161E; margin-top: 10px;">HELP Sign Reference</p>
+                </div>
+            </div>
+            
+            <div class="video-container">
+                <video id="video" autoplay></video>
+                <canvas id="canvas"></canvas>
+            </div>
+            
+            <div class="controls">
+                <button onclick="startCamera()">Start Detection</button>
+                <button onclick="stopCamera()">Stop Detection</button>
+            </div>
+            
+            <div id="result">
+                <div>Gesture: <span id="gesture">-</span></div>
+                <div>Confidence: <span id="confidence">0%</span></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress" style="width: 0%"></div>
+                </div>
+                <div style="font-size: 14px; margin-top: 5px;">Hold HELP for 2 seconds: <span id="buffer">0%</span></div>
+            </div>
+        </div>
+
+        <div style="background: #f0f0f0; padding: 30px; border-radius: 10px;">
+            <h3 style="color: #70161E; margin-bottom: 15px;">How It Works:</h3>
+            <ol style="line-height: 2;">
+                <li><strong>MediaPipe Hands:</strong> Extracts 21 hand landmarks (x, y, z coordinates)</li>
+                <li><strong>Random Forest ML Model:</strong> Trained on your hand gesture dataset</li>
+                <li><strong>2-Second Detection:</strong> Requires 80% HELP detection over 60 frames (2 seconds)</li>
+                <li><strong>Auto Alert:</strong> SMS sent to parent with Google Maps location link</li>
+            </ol>
+            
+            <h3 style="color: #70161E; margin-top: 30px; margin-bottom: 15px;">Setup Instructions:</h3>
+            <ol style="line-height: 2;">
+                <li>Run: <code>python collect_dataset.py</code> - Collect 50+ samples each for HELP and NO gestures</li>
+                <li>Run: <code>python train_model.py</code> - Train the ML model</li>
+                <li>Refresh this page - Real-time detection will use your trained model</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let video = document.getElementById('video');
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+        let stream = null;
+        let currentLocation = null;
+        let hands = null;
+        let camera = null;
+        let isRunning = false;
+
+        // Get location
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(
+                position => { currentLocation = { lat: position.coords.latitude, lng: position.coords.longitude }; },
+                error => console.error('Location error:', error),
+                { enableHighAccuracy: true }
+            );
+        }
+
+        function onResults(results) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            ctx.save();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+            
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const landmarks = results.multiHandLandmarks[0];
+                
+                // Draw hand landmarks
+                drawConnectors(ctx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 5});
+                drawLandmarks(ctx, landmarks, {color: '#FF0000', lineWidth: 2, radius: 5});
+                
+                // Prepare landmarks for prediction
+                const landmarkData = landmarks.map(lm => ({x: lm.x, y: lm.y, z: lm.z}));
+                
+                // Send to server for prediction
+                fetch('/predict_gesture', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        landmarks: landmarkData,
+                        latitude: currentLocation ? currentLocation.lat : 0,
+                        longitude: currentLocation ? currentLocation.lng : 0
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('gesture').textContent = data.gesture;
+                    document.getElementById('confidence').textContent = (data.confidence * 100).toFixed(1) + '%';
+                    document.getElementById('buffer').textContent = data.buffer_percentage.toFixed(0) + '%';
+                    document.getElementById('progress').style.width = data.buffer_percentage + '%';
+                    
+                    const resultDiv = document.getElementById('result');
+                    if (data.alert) {
+                        resultDiv.classList.add('alert-active');
+                        alert('🚨 EMERGENCY ALERT SENT! SMS sent to 6374145856 with your location!');
+                    } else {
+                        resultDiv.classList.remove('alert-active');
+                    }
+                })
+                .catch(err => console.error('Prediction error:', err));
+            }
+            ctx.restore();
+        }
+
+        async function startCamera() {
+            if (isRunning) return;
+            
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                
+                hands = new Hands({locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+                }});
+                
+                hands.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.7,
+                    minTrackingConfidence: 0.7
+                });
+                
+                hands.onResults(onResults);
+                
+                camera = new Camera(video, {
+                    onFrame: async () => {
+                        if (isRunning) await hands.send({image: video});
+                    },
+                    width: 640,
+                    height: 480
+                });
+                
+                camera.start();
+                isRunning = true;
+                document.getElementById('gesture').textContent = 'Detecting...';
+            } catch (err) {
+                alert('Camera access denied: ' + err.message);
+            }
+        }
+
+        function stopCamera() {
+            isRunning = false;
+            if (camera) camera.stop();
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById('gesture').textContent = '-';
+            document.getElementById('confidence').textContent = '0%';
+            document.getElementById('buffer').textContent = '0%';
+            document.getElementById('progress').style.width = '0%';
+        }
+    </script>
+</body>
+</html>

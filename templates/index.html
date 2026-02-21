@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign Language Converter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='new-theme.css') }}">
+    <style>
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; margin-bottom: 30px; color: #70161E; font-size: 36px; }
+        h1 img { height: 50px; width: auto; vertical-align: middle; margin-right: 10px; }
+        .section { background: white; padding: 30px; margin-bottom: 25px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 2px solid #4A5D44; }
+        .section h2 { color: #70161E; margin-bottom: 20px; border-bottom: 3px solid #D9A036; padding-bottom: 10px; }
+        button { background: #D96432; color: white; padding: 12px 24px; border: none; border-radius: 10px; cursor: pointer; margin: 5px; font-weight: 600; transition: all 0.3s; }
+        button:hover { transform: translateY(-2px); background: #70161E; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        input[type="file"], input[type="text"] { padding: 12px; margin: 5px; border-radius: 10px; border: 2px solid #4A5D44; background: white; color: #70161E; }
+        #videoPlayer { width: 100%; max-width: 640px; height: 480px; background: #000; margin: 20px auto; display: block; border-radius: 15px; border: 3px solid #D96432; }
+        .result { margin-top: 15px; padding: 15px; background: rgba(217,164,54,0.1); border-radius: 10px; border-left: 4px solid #D9A036; color: #70161E; }
+        .video-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
+        .video-item { background: linear-gradient(135deg, #4A5D44 0%, #D9A036 100%); padding: 15px; border-radius: 10px; text-align: center; font-weight: 600; color: white; }
+        #caption { text-align: center; font-size: 32px; font-weight: bold; color: #70161E; background: white; padding: 20px; border-radius: 10px; margin: 10px auto; max-width: 640px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 70px; display: flex; align-items: center; justify-content: center; border: 2px solid #D96432; }
+        .nav-links { text-align: center; margin-bottom: 25px; }
+        .nav-links a { color: white; text-decoration: none; margin: 0 10px; padding: 12px 24px; background: #D96432; border-radius: 10px; display: inline-block; transition: all 0.3s; font-weight: 600; }
+        .nav-links a:hover { transform: translateY(-2px); background: #70161E; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .nav-links a.active { background: #4A5D44; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><img src="/static/logo.png" alt="Logo">Sign Language Converter</h1>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="/" style="color: white; text-decoration: none; margin: 0 8px; padding: 12px 24px; background: #4A5D44; border-radius: 10px; font-weight: 600; display: inline-block;">Home</a>
+            <a href="/dashboard" style="color: white; text-decoration: none; margin: 0 8px; padding: 12px 24px; background: #4A5D44; border-radius: 10px; font-weight: 600; display: inline-block;">Dashboard</a>
+            <a href="/home" style="color: white; text-decoration: none; margin: 0 8px; padding: 12px 24px; background: #D96432; border-radius: 10px; font-weight: 600; display: inline-block;">Videos</a>
+            <a href="/learning" style="color: white; text-decoration: none; margin: 0 8px; padding: 12px 24px; background: #4A5D44; border-radius: 10px; font-weight: 600; display: inline-block;">Basics</a>
+            <a href="/progress" style="color: white; text-decoration: none; margin: 0 8px; padding: 12px 24px; background: #4A5D44; border-radius: 10px; font-weight: 600; display: inline-block;">Progress</a>
+            <button onclick="showEmergencyAlert()" style="background: #E74C3C; color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600; margin: 0 8px;">🚨 Emergency</button>
+            <a href="/logout" style="color: white; text-decoration: none; margin: 0 8px; padding: 12px 24px; background: #70161E; border-radius: 10px; font-weight: 600; display: inline-block;">Logout</a>
+        </div>
+        
+        <div class="section">
+            <h2>Audio Input</h2>
+            <button id="recordBtn">Start Recording</button>
+            <button id="stopBtn" disabled>Stop Recording</button>
+            <input type="file" id="audioFile" accept="audio/*,video/*">
+            <button onclick="uploadAudio()">Upload Audio/Video</button>
+            <div id="audioResult" class="result" style="display:none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>Video Player</h2>
+            <video id="videoPlayer" controls preload="auto"></video>
+            <div id="caption"></div>
+            <div style="text-align: center; margin-top: 10px;">
+                <button onclick="startPlaylist()">Play All</button>
+                <button onclick="resumePlaylist()">Resume</button>
+                <button onclick="pauseVideo()">Pause</button>
+                <button id="downloadBtn" onclick="downloadCurrentWithCaption()" style="display:none;">Download Current</button>
+                <a id="downloadAllBtn" download="sign_language_full.mp4" style="display:none;"><button>Download Full Video</button></a>
+            </div>
+            <div id="playlistInfo"></div>
+        </div>
+
+        <div class="section">
+            <h2>Teacher Videos</h2>
+            <div class="video-list">
+                {% for video in teacher_videos %}
+                <div class="video-item" onclick="playTeacherVideo('{{ video.video_path }}', '{{ video.title }}')" style="cursor: pointer;">
+                    {{ video.title }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function playTeacherVideo(filename, title) {
+            const video = document.getElementById('videoPlayer');
+            video.src = `/sign_videos/${filename}`;
+            video.loop = false;
+            video.play();
+            document.getElementById('caption').textContent = title;
+        }
+
+        let mediaRecorder, audioChunks = [], currentPlaylist = [];
+        let currentIndex = 0;
+        let isPaused = false;
+        let allVideosCompleted = false;
+        let currentWord = '';
+        let nextVideo = document.createElement('video');
+        let loopPlaylist = false;
+
+        document.getElementById('recordBtn').onclick = async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(audioChunks, { type: 'audio/wav' });
+                processAudio(blob);
+            };
+            
+            mediaRecorder.start();
+            document.getElementById('recordBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+        };
+
+        document.getElementById('stopBtn').onclick = () => {
+            mediaRecorder.stop();
+            document.getElementById('recordBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+        };
+
+        async function uploadAudio() {
+            const file = document.getElementById('audioFile').files[0];
+            if (!file) return alert('Select audio or video file');
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+            
+            try {
+                await processAudio(file);
+            } catch (error) {
+                alert('Upload failed: ' + error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        async function processAudio(audioBlob) {
+            const formData = new FormData();
+            formData.append('audio', audioBlob);
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 min
+                
+                const res = await fetch('/upload_audio', { 
+                    method: 'POST', 
+                    body: formData,
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    alert('Error: ' + (errorData.error || 'Upload failed'));
+                    return;
+                }
+                
+                const data = await res.json();
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                document.getElementById('audioResult').style.display = 'block';
+                document.getElementById('audioResult').innerHTML = `
+                    <strong>Original:</strong> ${data.original}<br>
+                    <strong>Sign Words:</strong> ${data.sign_words.join(' ')}<br>
+                    <strong>Available Videos:</strong> ${data.available.join(', ')}<br>
+                    <audio controls style="width: 100%; margin-top: 15px; border-radius: 10px;">
+                        <source src="/audio_uploads/input.wav" type="audio/wav">
+                        Your browser does not support the audio element.
+                    </audio>
+                `;
+                
+                if (data.available.length > 0) {
+                    preparePlaylist(data.available);
+                } else {
+                    alert('No animation videos found for these words');
+                }
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    alert('Upload timeout. File too large or slow connection.');
+                } else {
+                    alert('Error: ' + error.message);
+                }
+                throw error;
+            }
+        }
+
+        function preparePlaylist(words) {
+            currentPlaylist = words;
+            currentIndex = 0;
+            isPaused = false;
+            allVideosCompleted = false;
+            document.getElementById('playlistInfo').innerHTML = `Ready to play ${words.length} words. Click "Play All" to start.`;
+            document.getElementById('downloadAllBtn').style.display = 'none';
+            
+            // Auto-merge videos for seamless playback
+            fetch('/merge_videos', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({words: words})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('playlistInfo').innerHTML += ' (Merged video ready)';
+                }
+            })
+            .catch(err => console.error('Merge preparation failed:', err));
+        }
+        
+        function startPlaylist() {
+            if (!currentPlaylist || currentPlaylist.length === 0) {
+                alert('No playlist available. Upload a video first.');
+                return;
+            }
+            
+            const video = document.getElementById('videoPlayer');
+            const caption = document.getElementById('caption');
+            const playlistInfo = document.getElementById('playlistInfo');
+            const downloadAllBtn = document.getElementById('downloadAllBtn');
+            
+            playlistInfo.innerHTML = 'Loading merged video...';
+            
+            // Play merged video for seamless continuous playback
+            fetch('/merge_videos', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({words: currentPlaylist})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    video.src = `/merged_videos/${data.filename}`;
+                    video.load();
+                    video.play();
+                    caption.textContent = currentPlaylist.join(' → ');
+                    playlistInfo.innerHTML = 'Playing merged video';
+                    downloadAllBtn.style.display = 'inline';
+                    downloadAllBtn.href = `/merged_videos/${data.filename}`;
+                    downloadAllBtn.download = 'sign_language_full.mp4';
+                    downloadAllBtn.onclick = null;
+                    document.getElementById('downloadBtn').style.display = 'none';
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(err => {
+                alert('Failed to create merged video: ' + err);
+            });
+        }
+        
+        function resumePlaylist() {
+            if (!currentPlaylist || currentPlaylist.length === 0) {
+                alert('No playlist available. Upload a video first.');
+                return;
+            }
+            if (allVideosCompleted) {
+                alert('Playlist finished. Click "Play All" to restart.');
+                return;
+            }
+            isPaused = false;
+            const video = document.getElementById('videoPlayer');
+            if (video.paused && video.src) {
+                video.play();
+            } else {
+                playVideoPlaylist();
+            }
+        }
+        
+        function playVideoPlaylist() {
+            if (!currentPlaylist || currentPlaylist.length === 0 || isPaused) {
+                return;
+            }
+            
+            const video = document.getElementById('videoPlayer');
+            const caption = document.getElementById('caption');
+            const playlistInfo = document.getElementById('playlistInfo');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const downloadAllBtn = document.getElementById('downloadAllBtn');
+            
+            video.loop = false;
+            
+            function preloadNext() {
+                if (currentIndex < currentPlaylist.length) {
+                    const nextWord = currentPlaylist[currentIndex];
+                    let nextSrc = `/animations/${nextWord}.mp4`;
+                    nextVideo.src = nextSrc;
+                    nextVideo.onerror = () => {
+                        nextVideo.src = `/sign_videos/${nextWord}.mp4`;
+                    };
+                    nextVideo.load();
+                }
+            }
+            
+            function playNext() {
+                if (isPaused) return;
+                
+                if (currentIndex >= currentPlaylist.length) {
+                    if (!allVideosCompleted) {
+                        allVideosCompleted = true;
+                        downloadAllBtn.style.display = 'inline';
+                        downloadAllBtn.href = '#';
+                        downloadAllBtn.onclick = mergeAndDownloadVideos;
+                    }
+                    caption.textContent = 'Completed!';
+                    playlistInfo.innerHTML = 'All videos finished';
+                    return;
+                }
+                
+                const word = currentPlaylist[currentIndex];
+                currentWord = word;
+                
+                let videoSrc = `/animations/${word}.mp4`;
+                
+                video.src = videoSrc;
+                video.onerror = () => {
+                    video.src = `/sign_videos/${word}.mp4`;
+                };
+                
+                video.load();
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(err => console.error('Play error:', err));
+                }
+                
+                caption.textContent = word;
+                playlistInfo.innerHTML = `Playing: ${word} (${currentIndex + 1}/${currentPlaylist.length})`;
+                
+                downloadBtn.style.display = 'inline';
+                
+                currentIndex++;
+                preloadNext();
+            }
+            
+            video.onended = playNext;
+            playNext();
+        }
+        
+        function downloadCurrentWithCaption() {
+            if (!currentWord) {
+                alert('No video playing');
+                return;
+            }
+            window.location.href = `/download_with_caption/${currentWord}`;
+        }
+        
+        function pauseVideo() {
+            isPaused = true;
+            document.getElementById('videoPlayer').pause();
+        }
+        
+        function mergeAndDownloadVideos() {
+            if (!currentPlaylist || currentPlaylist.length === 0) {
+                alert('No videos to merge');
+                return;
+            }
+            
+            const downloadAllBtn = document.getElementById('downloadAllBtn');
+            downloadAllBtn.textContent = 'Merging...';
+            
+            fetch('/merge_videos', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({words: currentPlaylist})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    downloadAllBtn.href = `/merged_videos/${data.filename}`;
+                    downloadAllBtn.download = 'sign_language_full.mp4';
+                    downloadAllBtn.textContent = 'Download Full Video';
+                    downloadAllBtn.onclick = null;
+                    downloadAllBtn.click();
+                } else {
+                    alert('Error: ' + data.error);
+                    downloadAllBtn.textContent = 'Download Full Video';
+                }
+            })
+            .catch(err => {
+                alert('Merge failed: ' + err);
+                downloadAllBtn.textContent = 'Download Full Video';
+            });
+        }
+    </script>
+    
+    <div id="emergencyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative;">
+            <button onclick="closeEmergencyModal()" style="position: absolute; top: 10px; right: 10px; background: #E74C3C; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            <div id="emergencyContent"></div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='emergency.js') }}"></script>
+</body>
+</html>

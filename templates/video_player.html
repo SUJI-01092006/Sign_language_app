@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ video.title }} - SignBridge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard-theme.css') }}">
+    <style>
+        .container { max-width: 1000px; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1><img src="/static/logo.png" alt="Logo" style="height: 50px; width: auto; vertical-align: middle; margin-right: 10px;">{{ video.title }}</h1>
+        <div>
+            <a href="/dashboard">Back to Dashboard</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="card">
+            <h2>{{ video.title }}</h2>
+            <video controls autoplay>
+                <source src="/sign_videos/{{ video.video_path }}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="info">
+                <p><strong>Uploaded by:</strong> {{ video.teacher.username }}</p>
+                <p><strong>Date:</strong> {{ video.created_at.strftime('%B %d, %Y') }}</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Risk Detection - SignBridge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard-theme.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .risk-card { background: white; padding: 30px; border-radius: 15px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin: 20px 0; }
+        .stat-box { background: #70161E; color: white; padding: 25px; border-radius: 15px; text-align: center; box-shadow: 0 8px 16px rgba(0,0,0,0.2); transition: transform 0.3s; }
+        .stat-box:hover { transform: translateY(-5px); }
+        .stat-box h3 { margin: 0; font-size: 48px; font-weight: bold; }
+        .stat-box p { margin: 10px 0 0 0; font-size: 14px; opacity: 0.9; }
+        .chart-container { background: white; padding: 20px; border-radius: 10px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .risk-item { background: #f8f9fa; border-left: 5px solid #28a745; padding: 20px; margin: 15px 0; border-radius: 8px; transition: all 0.3s; }
+        .risk-item:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .risk-item.warning { border-left-color: #ffc107; background: #fff3cd; }
+        .risk-item.critical { border-left-color: #dc3545; background: #f8d7da; }
+        .progress-bar { width: 100%; height: 8px; background: #e0e0e0; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A); transition: width 0.5s; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1><img src="/static/logo.png" alt="Logo" style="height: 50px; width: auto; vertical-align: middle; margin-right: 10px;">AI Risk Detection System</h1>
+        <div>
+            <a href="/">Home</a>
+            <a href="/dashboard">Dashboard</a>
+            {% if current_user.is_authenticated %}
+            <a href="/logout">Logout</a>
+            {% else %}
+            <a href="/login">Login</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="risk-card">
+            <h2 style="color: #70161E; margin-bottom: 20px;">AI-Powered Student Risk Detection</h2>
+            <p style="font-size: 18px; color: #666; margin-bottom: 30px;">
+                Our AI system continuously monitors student behavior patterns and alerts parents/teachers about potential issues before they become serious problems.
+            </p>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <h3 id="total-students">0</h3>
+                    <p>Students Monitored</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="at-risk">0</h3>
+                    <p>At-Risk Students</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="alerts-sent">0</h3>
+                    <p>Alerts Sent Today</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="logins-today">0</h3>
+                    <p>Logins Today</p>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px; font-size: 18px; color: #666;">
+                <strong>Risk Level:</strong> <span id="risk-percentage" style="color: #f5576c; font-weight: bold; font-size: 24px;">0%</span> of students need attention
+                <div class="progress-bar" style="max-width: 400px; margin: 15px auto;">
+                    <div class="progress-fill" id="risk-bar" style="width: 0%; background: linear-gradient(90deg, #f5576c, #f093fb);"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="risk-card">
+            <h2 style="color: #70161E; margin-bottom: 20px;">Activity Analytics</h2>
+            <div class="chart-container">
+                <canvas id="activityChart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+
+        <div class="risk-card">
+            <h2 style="color: #70161E;">What We Monitor</h2>
+            <div class="risk-item safe">
+                <h3>Inactivity Detection</h3>
+                <p>AI detects if student hasn't logged in for 7+ days and alerts parents automatically.</p>
+            </div>
+
+            <div class="risk-item safe">
+                <h3>Failed Login Monitoring</h3>
+                <p>Tracks multiple failed login attempts (5+ in 24 hours) indicating potential account issues.</p>
+            </div>
+
+            <div class="risk-item safe">
+                <h3>Attendance Tracking</h3>
+                <p>Monitors if no attendance recorded for 14+ days and notifies relevant parties.</p>
+            </div>
+
+            <div class="risk-item safe">
+                <h3>Performance Analysis</h3>
+                <p>Analyzes quiz scores and detects declining performance patterns (below 40% average).</p>
+            </div>
+
+            <div class="risk-item safe">
+                <h3>Unusual Behavior Detection</h3>
+                <p>Identifies abnormal login patterns and suspicious activity using machine learning.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let activityChart;
+        
+        fetch('/api/risk_stats')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('total-students').textContent = data.total_students || 0;
+                document.getElementById('at-risk').textContent = data.at_risk || 0;
+                document.getElementById('alerts-sent').textContent = data.alerts_today || 0;
+                document.getElementById('logins-today').textContent = data.logins_today || 0;
+                
+                const riskPct = data.risk_percentage || 0;
+                document.getElementById('risk-percentage').textContent = riskPct + '%';
+                document.getElementById('risk-bar').style.width = riskPct + '%';
+                
+                // Create chart
+                const ctx = document.getElementById('activityChart');
+                if (ctx) {
+                    activityChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Total Students', 'At Risk', 'Logins Today', 'Alerts Sent'],
+                            datasets: [{
+                                label: 'Count',
+                                data: [data.total_students || 0, data.at_risk || 0, data.logins_today || 0, data.alerts_today || 0],
+                                backgroundColor: [
+                                    '#70161E',
+                                    '#D96432',
+                                    '#4A5D44',
+                                    '#8BC34A'
+                                ],
+                                borderColor: [
+                                    '#70161E',
+                                    '#D96432',
+                                    '#4A5D44',
+                                    '#8BC34A'
+                                ],
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: { display: false },
+                                title: { 
+                                    display: true, 
+                                    text: 'Real-Time Student Activity Metrics', 
+                                    font: { size: 18, weight: 'bold' },
+                                    color: '#70161E'
+                                }
+                            },
+                            scales: {
+                                y: { 
+                                    beginAtZero: true, 
+                                    ticks: { stepSize: 1 }
+                                }
+                            }
+                        }
+                    });
+                }
+            })
+            .catch(err => console.error('Error loading stats:', err));
+    </script>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard - SignBridge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard-theme.css') }}">
+    <style>
+        .container { max-width: 1400px; }
+        .log-entry { border-left-color: #D9A036; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1><img src="/static/logo.png" alt="Logo" style="height: 50px; width: auto; vertical-align: middle; margin-right: 10px;">Admin Dashboard</h1>
+        <div>
+            <a href="/">Home</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card"><h3>{{ stats.total_students }}</h3><p>Students</p></div>
+            <div class="stat-card"><h3>{{ stats.total_teachers }}</h3><p>Teachers</p></div>
+            <div class="stat-card"><h3>{{ stats.total_parents }}</h3><p>Parents</p></div>
+            <div class="stat-card"><h3>{{ stats.active_users }}</h3><p>Active Users</p></div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('users')">Users</div>
+            <div class="tab" onclick="showTab('activities')">Student Activities</div>
+            <div class="tab" onclick="showTab('logs')">Activity Logs</div>
+            <div class="tab" onclick="showTab('feedback')">Feedback</div>
+        </div>
+
+        <div id="users-tab" class="card">
+            <h2>User Management</h2>
+            <button onclick="openAddUserModal()">Add User</button>
+            <a href="/admin/report/pdf" download><button>Download PDF Report</button></a>
+            <table>
+                <tr><th>Username</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.role }}</td>
+                    <td>{{ 'Active' if user.is_active else 'Inactive' }}</td>
+                    <td>
+                        <button onclick="editUser({{ user.id }})">Edit</button>
+                        <button onclick="toggleUser({{ user.id }})">{{ 'Deactivate' if user.is_active else 'Activate' }}</button>
+                        <button class="btn-danger" onclick="deleteUser({{ user.id }})">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div id="activities-tab" class="card" style="display:none;">
+            <h2>Student Activities & Progress</h2>
+            <table>
+                <tr><th>Student</th><th>Module</th><th>Activity</th><th>Score</th><th>Status</th><th>Date</th></tr>
+                {% for progress in all_progress %}
+                <tr>
+                    <td>{{ progress.user.username }}</td>
+                    <td>{{ progress.module }}</td>
+                    <td>{{ progress.item }}</td>
+                    <td>{{ progress.score }}%</td>
+                    <td>{{ 'Completed' if progress.completed else 'In Progress' }}</td>
+                    <td>{{ progress.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div id="logs-tab" class="card" style="display:none;">
+            <h2>Activity Logs</h2>
+            <div>
+                <select id="roleFilter" onchange="filterLogs()">
+                    <option value="">All Roles</option>
+                    <option value="student">Students</option>
+                    <option value="teacher">Teachers</option>
+                    <option value="parent">Parents</option>
+                    <option value="admin">Admins</option>
+                </select>
+                <input type="date" id="startDate" onchange="filterLogs()">
+                <input type="date" id="endDate" onchange="filterLogs()">
+            </div>
+            <div id="logsContainer">
+                {% for log in recent_logs %}
+                <div class="log-entry">
+                    <strong>{{ log.user.username }}</strong> ({{ log.user.role }}) - {{ log.action }}<br>
+                    <small>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }} | IP: {{ log.ip_address }}</small><br>
+                    {% if log.details %}<em>{{ log.details }}</em>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="feedback-tab" class="card" style="display:none;">
+            <h2>User Feedback</h2>
+            <div id="feedbackContainer">
+                <p>Loading feedback...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Add User</h2>
+            <input type="text" id="username" placeholder="Username">
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <select id="role" onchange="toggleParentSelector()">
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="parent">Parent</option>
+                <option value="admin">Admin</option>
+            </select>
+            <div id="parentSelector" style="display:none;">
+                <select id="parentId">
+                    <option value="">No Parent</option>
+                    {% for parent in parents %}
+                    <option value="{{ parent.id }}">{{ parent.username }} ({{ parent.email }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button onclick="saveUser()">Save</button>
+            <button onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        let editingUserId = null;
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('users-tab').style.display = tab === 'users' ? 'block' : 'none';
+            document.getElementById('activities-tab').style.display = tab === 'activities' ? 'block' : 'none';
+            document.getElementById('logs-tab').style.display = tab === 'logs' ? 'block' : 'none';
+            document.getElementById('feedback-tab').style.display = tab === 'feedback' ? 'block' : 'none';
+            
+            if (tab === 'feedback') {
+                loadFeedback();
+            }
+        }
+
+        function loadFeedback() {
+            fetch('/admin/feedback')
+                .then(res => res.json())
+                .then(feedbacks => {
+                    const container = document.getElementById('feedbackContainer');
+                    if (feedbacks.length === 0) {
+                        container.innerHTML = '<p>No feedback received yet.</p>';
+                    } else {
+                        container.innerHTML = feedbacks.map(f => `
+                            <div class="log-entry" style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                                <strong>${f.name}</strong> (${f.email})<br>
+                                <small>${f.created_at}</small><br>
+                                <p style="margin-top: 10px;">${f.message}</p>
+                            </div>
+                        `).join('');
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('feedbackContainer').innerHTML = '<p>Error loading feedback.</p>';
+                });
+        }
+
+        function openAddUserModal() {
+            editingUserId = null;
+            document.getElementById('modalTitle').textContent = 'Add User';
+            document.getElementById('username').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('password').placeholder = 'Password';
+            document.getElementById('role').value = 'student';
+            document.getElementById('parentSelector').style.display = 'block';
+            document.getElementById('parentId').value = '';
+            document.getElementById('userModal').style.display = 'block';
+        }
+
+        function toggleParentSelector() {
+            const role = document.getElementById('role').value;
+            document.getElementById('parentSelector').style.display = role === 'student' ? 'block' : 'none';
+        }
+
+        function closeModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
+
+        function saveUser() {
+            const data = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                role: document.getElementById('role').value
+            };
+            
+            const password = document.getElementById('password').value;
+            if (password) {
+                data.password = password;
+            }
+            
+            if (data.role === 'student') {
+                const parentId = document.getElementById('parentId').value;
+                if (parentId) data.parent_id = parseInt(parentId);
+            }
+            
+            const url = editingUserId ? `/admin/users/${editingUserId}/edit` : '/admin/users/add';
+            const method = editingUserId ? 'PUT' : 'POST';
+            
+            fetch(url, {
+                method: method,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    closeModal();
+                    location.reload();
+                } else {
+                    alert(data.error || 'Failed to save user');
+                }
+            }).catch(err => {
+                alert('Error: ' + err.message);
+            });
+        }
+
+        function editUser(userId) {
+            editingUserId = userId;
+            document.getElementById('modalTitle').textContent = 'Edit User';
+            document.getElementById('username').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('password').placeholder = 'Leave blank to keep current password';
+            
+            fetch(`/admin/users/${userId}`)
+                .then(res => res.json())
+                .then(user => {
+                    document.getElementById('username').value = user.username;
+                    document.getElementById('email').value = user.email;
+                    document.getElementById('role').value = user.role;
+                    
+                    // Show parent selector if student
+                    if (user.role === 'student') {
+                        document.getElementById('parentSelector').style.display = 'block';
+                        document.getElementById('parentId').value = user.parent_id || '';
+                    } else {
+                        document.getElementById('parentSelector').style.display = 'none';
+                    }
+                    
+                    document.getElementById('userModal').style.display = 'block';
+                })
+                .catch(err => {
+                    alert('Error loading user: ' + err.message);
+                });
+        }
+
+        function toggleUser(userId) {
+            fetch(`/admin/users/${userId}/toggle`, {method: 'POST'})
+                .then(res => res.json())
+                .then(data => { if (data.success) location.reload(); });
+        }
+
+        function deleteUser(userId) {
+            if (confirm('Delete this user?')) {
+                fetch(`/admin/users/${userId}/delete`, {method: 'DELETE'})
+                    .then(res => res.json())
+                    .then(data => { if (data.success) location.reload(); });
+            }
+        }
+
+        function filterLogs() {
+            const role = document.getElementById('roleFilter').value;
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            
+            fetch(`/admin/logs?role=${role}&start_date=${start}&end_date=${end}`)
+                .then(res => res.json())
+                .then(logs => {
+                    const container = document.getElementById('logsContainer');
+                    container.innerHTML = logs.map(log => `
+                        <div class="log-entry">
+                            <strong>${log.username}</strong> (${log.role}) - ${log.action}<br>
+                            <small>${log.timestamp} | IP: ${log.ip_address}</small><br>
+                            ${log.details ? `<em>${log.details}</em>` : ''}
+                        </div>
+                    `).join('');
+                });
+        }
+    </script>
+</body>
+</html>

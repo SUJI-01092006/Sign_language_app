@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ student.username }} - Progress Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard-theme.css') }}">
+</head>
+<body>
+    <div class="navbar">
+        <h1><img src="/static/logo.png" alt="Logo" style="height: 50px; width: auto; vertical-align: middle; margin-right: 10px;">{{ student.username }}'s Progress</h1>
+        <div>
+            <a href="/dashboard">Back to Dashboard</a>
+            <a href="/">Home</a>
+            <a href="/logout">Logout</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card"><h3>{{ stats.total }}</h3><p>Total Activities</p></div>
+            <div class="stat-card"><h3>{{ stats.completed }}</h3><p>Completed</p></div>
+            <div class="stat-card"><h3>{{ stats.avg_score }}%</h3><p>Average Score</p></div>
+            <div class="stat-card"><h3>{{ stats.quizzes }}</h3><p>Quizzes Taken</p></div>
+        </div>
+
+        <div class="card">
+            <h2>Recent Activities</h2>
+            {% if progress %}
+            <table>
+                <tr><th>Module</th><th>Activity</th><th>Score</th><th>Status</th><th>Date</th></tr>
+                {% for p in progress %}
+                <tr>
+                    <td>{{ p.module.capitalize() }}</td>
+                    <td>{{ p.item }}</td>
+                    <td>{{ p.score }}%</td>
+                    <td>{{ 'Completed' if p.completed else 'In Progress' }}</td>
+                    <td>{{ p.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <p style="text-align: center; padding: 20px; color: #666;">No activities recorded yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h2>Attendance (Last 30 Days)</h2>
+            {% if attendance %}
+            <table>
+                <tr><th>Date</th><th>Status</th><th>Marked By</th></tr>
+                {% for a in attendance %}
+                <tr>
+                    <td>{{ a.date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ a.status.capitalize() }}</td>
+                    <td>{{ a.teacher.username if a.teacher else 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <p style="text-align: center; padding: 20px; color: #666;">No attendance records.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h2>Teacher Remarks</h2>
+            {% if remarks %}
+            {% for r in remarks %}
+            <div style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #4A5D44;">
+                <strong>{{ r.teacher.username }}</strong> - {{ r.created_at.strftime('%Y-%m-%d %H:%M') }}<br>
+                <span style="color: #666; font-size: 12px;">{{ r.remark_type.capitalize() }}</span><br>
+                <p style="margin-top: 10px;">{{ r.content }}</p>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p style="text-align: center; padding: 20px; color: #666;">No remarks yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign Up - SignBridge</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='new-theme.css') }}">
+    <style>
+        .content { display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 80px); padding: 20px; }
+        .container { background: white; padding: 50px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 450px; border: 2px solid #4A5D44; }
+        h2 { text-align: center; color: #70161E; margin-bottom: 30px; font-size: 32px; }
+        .form-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 8px; color: #70161E; font-weight: 600; font-size: 14px; }
+        input, select { width: 100%; padding: 14px; border: 2px solid #4A5D44; border-radius: 10px; font-size: 16px; transition: all 0.3s; }
+        input:focus, select:focus { outline: none; border-color: #D96432; box-shadow: 0 0 0 3px rgba(217,100,50,0.1); }
+        button { width: 100%; padding: 14px; background: #D96432; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
+        button:hover { transform: translateY(-2px); background: #70161E; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .link { text-align: center; margin-top: 25px; font-size: 14px; }
+        .link a { color: #D96432; text-decoration: none; font-weight: 600; }
+        .link a:hover { text-decoration: underline; color: #70161E; }
+        .error { color: #70161E; margin-bottom: 15px; background: rgba(217,100,50,0.1); padding: 10px; border-radius: 8px; font-size: 14px; border-left: 4px solid #D96432; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo"><img src="/static/logo.png" alt="Logo"> SignBridge</div>
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="/login">Login</a>
+            <a href="/signup" class="nav-btn">Sign Up</a>
+        </div>
+    </nav>
+    <div class="content">
+        <div class="container">
+            <h2>Create Account</h2>
+            <div id="error" class="error" style="display:none;"></div>
+            <form id="signupForm">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <div style="position: relative;">
+                        <input type="password" name="password" id="password" required>
+                        <span onclick="togglePassword()" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 20px;">👁️</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select name="role" id="roleSelect" required>
+                        <option value="student">Student</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="parent">Parent</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group" id="parentEmailGroup">
+                    <label>Parent Email (for daily progress reports)</label>
+                    <input type="email" name="parent_email" id="parentEmail" required>
+                </div>
+                <div class="form-group" id="parentPhoneGroup">
+                    <label>Parent Phone (for emergency alerts with location)</label>
+                    <input type="tel" name="parent_phone" id="parentPhone" placeholder="+1234567890" required>
+                </div>
+                <button type="submit">Sign Up</button>
+            </form>
+            <div class="link">
+                Already have an account? <a href="/login">Login</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        function togglePassword() {
+            const pwd = document.getElementById('password');
+            pwd.type = pwd.type === 'password' ? 'text' : 'password';
+        }
+        
+        document.getElementById('roleSelect').addEventListener('change', function() {
+            const parentEmailGroup = document.getElementById('parentEmailGroup');
+            const parentPhoneGroup = document.getElementById('parentPhoneGroup');
+            const parentEmail = document.getElementById('parentEmail');
+            const parentPhone = document.getElementById('parentPhone');
+            if (this.value === 'student') {
+                parentEmailGroup.style.display = 'block';
+                parentPhoneGroup.style.display = 'block';
+                parentEmail.required = true;
+                parentPhone.required = true;
+            } else {
+                parentEmailGroup.style.display = 'none';
+                parentPhoneGroup.style.display = 'none';
+                parentEmail.required = false;
+                parentPhone.required = false;
+            }
+        });
+        
+        document.getElementById('signupForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            try {
+                const res = await fetch('/signup', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = '/login';
+                } else {
+                    document.getElementById('error').style.display = 'block';
+                    document.getElementById('error').textContent = data.error || 'Signup failed';
+                }
+            } catch (err) {
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = 'Server error: ' + err.message;
+            }
+        };
+    </script>
+</body>
+</html>
