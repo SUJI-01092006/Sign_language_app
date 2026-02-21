@@ -6,17 +6,14 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from models import db, User, Progress, Assignment, UserLog, Attendance, Remark, Notification, Feedback, Alert
 from functools import wraps
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import csv
 from io import StringIO, BytesIO
-from email_service import init_email_scheduler
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib import colors
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from sms_service import send_sms_alert
-from ai_risk_detector import AIRiskDetector
 
 import os
 
@@ -110,12 +107,6 @@ def login():
                 login_user(user)
                 log_activity(user.id, 'login', 'User logged in')
                 
-                # AI Risk Detection
-                if user.role == 'student':
-                    risks = AIRiskDetector.analyze_student_risk(user.id)
-                    if risks:
-                        AIRiskDetector.send_risk_alert(user.id, risks)
-                
                 return jsonify({'success': True, 'role': user.role}) if request.is_json else redirect(url_for('dashboard'))
             else:
                 # Log failed login
@@ -196,9 +187,6 @@ def parent_dashboard():
         student.progress_count = len(progress)
         student.completed_count = len([p for p in progress if p.completed])
         student.avg_score = round(sum([p.score for p in progress]) / len(progress)) if progress else 0
-        
-        # AI Risk Detection
-        student.ai_risks = AIRiskDetector.analyze_student_risk(student.id)
     
     return render_template('parent_dashboard.html', students=students)
 
@@ -710,75 +698,12 @@ def alert():
 
 @app.route('/api/risk_stats')
 def risk_stats():
-    try:
-        total = User.query.filter_by(role='student', is_active=True).count()
-        
-        at_risk = 0
-        students = User.query.filter_by(role='student', is_active=True).all()
-        for student in students:
-            risks = AIRiskDetector.analyze_student_risk(student.id)
-            if risks:
-                at_risk += 1
-        
-        alerts_today = Alert.query.filter(
-            Alert.created_at >= datetime.now().replace(hour=0, minute=0, second=0)
-        ).count()
-        
-        # Additional analytics
-        total_logins_today = UserLog.query.filter(
-            UserLog.action == 'login',
-            UserLog.timestamp >= datetime.now().replace(hour=0, minute=0, second=0)
-        ).count()
-        
-        failed_logins_today = UserLog.query.filter(
-            UserLog.action == 'login_failed',
-            UserLog.timestamp >= datetime.now().replace(hour=0, minute=0, second=0)
-        ).count()
-        
-        return jsonify({
-            'total_students': total,
-            'at_risk': at_risk,
-            'alerts_today': alerts_today,
-            'logins_today': total_logins_today,
-            'failed_logins_today': failed_logins_today,
-            'risk_percentage': round((at_risk / total * 100) if total > 0 else 0, 1)
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    return jsonify({'total_students': 0, 'at_risk': 0, 'alerts_today': 0})
 
 @app.route('/api/children_risks')
 @login_required
 def children_risks():
-    if current_user.role != 'parent':
-        return jsonify([])
-    
-    children = User.query.filter_by(role='student', parent_id=current_user.id).all()
-    result = []
-    
-    for child in children:
-        risks = AIRiskDetector.analyze_student_risk(child.id)
-        
-        # Get detailed analytics
-        last_login = UserLog.query.filter_by(user_id=child.id, action='login').order_by(UserLog.timestamp.desc()).first()
-        last_login_str = last_login.timestamp.strftime('%Y-%m-%d %H:%M') if last_login else 'Never'
-        
-        recent_progress = Progress.query.filter_by(user_id=child.id).order_by(Progress.timestamp.desc()).limit(5).all()
-        avg_score = round(sum([p.score for p in recent_progress]) / len(recent_progress)) if recent_progress else 0
-        
-        attendance_count = Attendance.query.filter_by(student_id=child.id).filter(
-            Attendance.date >= datetime.now().date() - timedelta(days=30)
-        ).count()
-        
-        result.append({
-            'name': child.username,
-            'risks': risks,
-            'last_login': last_login_str,
-            'avg_score': avg_score,
-            'attendance_30days': attendance_count,
-            'total_activities': len(Progress.query.filter_by(user_id=child.id).all())
-        })
-    
-    return jsonify(result)
+    return jsonify([])
 
 @app.route('/submit_feedback', methods=['POST'])
 def submit_feedback():
@@ -812,56 +737,7 @@ def admin_view_feedback():
 
 @app.route('/send_alert', methods=['POST'])
 def send_alert():
-    try:
-        data = request.get_json()
-        student_name = "Student"
-        parent_phone = "6374145856"  # Default test number
-        
-        # If user is logged in as student
-        if current_user.is_authenticated and current_user.role == 'student':
-            student_name = current_user.username
-            # Use student's parent phone if available
-            if current_user.parent_phone:
-                parent_phone = current_user.parent_phone
-            elif current_user.parent_id:
-                parent = User.query.get(current_user.parent_id)
-                if parent and parent.parent_phone:
-                    parent_phone = parent.parent_phone
-            
-            if current_user.parent_id:
-                alert = Alert(
-                    student_id=current_user.id,
-                    parent_id=current_user.parent_id,
-                    sign_detected=data.get('sign'),
-                    latitude=data.get('latitude'),
-                    longitude=data.get('longitude')
-                )
-                db.session.add(alert)
-                
-                notif = Notification(
-                    user_id=current_user.parent_id,
-                    message=f'EMERGENCY: {student_name} detected "{data.get("sign")}" sign at location'
-                )
-                db.session.add(notif)
-                db.session.commit()
-        
-        # Send SMS to parent phone
-        sms_result = send_sms_alert(
-            parent_phone,
-            student_name,
-            data.get('sign'),
-            data.get('latitude'),
-            data.get('longitude')
-        )
-        
-        return jsonify({
-            'success': True, 
-            'sms_sent': True,
-            'phone': parent_phone,
-            'message': f'Alert sent to {parent_phone}'
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    return jsonify({'error': 'SMS alerts not available'}), 400
 
 @app.route('/parent/alerts')
 @login_required
@@ -914,5 +790,4 @@ def student_progress_details(student_id):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        init_email_scheduler(app)
     app.run(debug=True, port=5000)
