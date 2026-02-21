@@ -20,8 +20,10 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from sms_service import send_sms_alert
 from ai_risk_detector import AIRiskDetector
 
+import os
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///signlanguage.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
