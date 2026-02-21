@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.db
+instance/
+audio_uploads/
+merged_videos/
+sign_videos/*.mp4
+archive/
+learning/Animation_video/
+*.wav
+*.mp4
+.env
