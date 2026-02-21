@@ -1,9 +1,5 @@
 flask
 gunicorn
-openai-whisper
-spacy
-numpy
 flask-login
 flask-sqlalchemy
 reportlab
-requests
