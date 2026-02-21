@@ -1,6 +1,4 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, flash, session, Response
-import whisper
-import spacy
 import os
 import subprocess
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -33,7 +31,6 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 model = None
-nlp = spacy.load("en_core_web_sm")
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -76,14 +73,7 @@ os.makedirs(AUDIO_FOLDER, exist_ok=True)
 os.makedirs(MERGED_FOLDER, exist_ok=True)
 
 def convert_to_sign(text):
-    doc = nlp(text)
-    words = []
-    for token in doc:
-        if token.is_punct:
-            continue
-        if token.pos_ not in ["AUX", "DET", "ADP"]:
-            words.append(token.lemma_.upper() if token.pos_ == "VERB" else token.text.upper())
-    return words
+    return text.upper().split()
 
 @app.route('/')
 def landing():
@@ -263,83 +253,7 @@ def save_progress():
 
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
-    try:
-        if 'audio' not in request.files:
-            return jsonify({'error': 'No audio file'}), 400
-        
-        file = request.files['audio']
-        if not file.filename:
-            return jsonify({'error': 'No file selected'}), 400
-            
-        file_ext = file.filename.split('.')[-1].lower()
-        
-        # Check if it's a video file
-        if file_ext in ['mp4', 'avi', 'mov', 'mkv', 'webm', 'flv', 'wmv']:
-            video_path = os.path.abspath(os.path.join(AUDIO_FOLDER, 'input_video.' + file_ext))
-            audio_path = os.path.abspath(os.path.join(AUDIO_FOLDER, 'input.wav'))
-            file.save(video_path)
-            
-            # Check if video file is valid
-            if os.path.getsize(video_path) == 0:
-                return jsonify({'error': 'Video file is empty'}), 400
-            
-            # Remove old audio file if exists
-            if os.path.exists(audio_path):
-                os.remove(audio_path)
-            
-            # Extract audio from video using FFmpeg - get full audio
-            try:
-                result = subprocess.run(
-                    ['ffmpeg', '-i', video_path, '-vn', '-acodec', 'pcm_s16le', '-ar', '16000', '-ac', '1', '-y', audio_path],
-                    capture_output=True, text=True, timeout=60
-                )
-                
-                if not os.path.exists(audio_path):
-                    return jsonify({'error': 'This video has no audio track. Please upload a video with speech.'}), 400
-                
-                if os.path.getsize(audio_path) < 16000:  # Less than 1 second of audio
-                    return jsonify({'error': 'Audio is too short. Please upload a video with clear speech.'}), 400
-                    
-            except FileNotFoundError:
-                return jsonify({'error': 'FFmpeg not found in PATH'}), 500
-            except subprocess.TimeoutExpired:
-                return jsonify({'error': 'Video processing timeout'}), 500
-            except Exception as e:
-                return jsonify({'error': f'Error: {str(e)}'}), 500
-        else:
-            audio_path = os.path.join(AUDIO_FOLDER, 'input.wav')
-            file.save(audio_path)
-        
-        if not os.path.exists(audio_path):
-            return jsonify({'error': 'Audio file not created'}), 500
-        
-        # Check audio file size
-        if os.path.getsize(audio_path) < 16000:  # Less than 1 second
-            return jsonify({'error': 'Audio is too short or has no speech. Please use a video/audio with clear speech.'}), 400
-        
-        try:
-            whisper_model = load_whisper_model()
-            result = whisper_model.transcribe(audio_path, language='en', task='transcribe', verbose=False, fp16=False, beam_size=1, best_of=1)
-            text = result.get("text", "").strip()
-        except Exception as e:
-            return jsonify({'error': 'Could not transcribe audio. Please ensure the video has clear speech.'}), 400
-        
-        if not text:
-            return jsonify({'error': 'No speech detected'}), 400
-        
-        sign_words = convert_to_sign(text)
-        
-        available = []
-        for w in sign_words:
-            if os.path.exists(f'{ANIMATION_FOLDER}/{w}.mp4'):
-                available.append(w)
-            elif os.path.exists(f'{UPLOAD_FOLDER}/{w}.mp4'):
-                available.append(w)
-        
-        return jsonify({'original': text, 'sign_words': sign_words, 'available': available})
-    
-    except Exception as e:
-        return jsonify({'error': f'Server error: {str(e)}'}), 500
+    return jsonify({'error': 'Audio transcription not available on free tier'}), 400
 
 @app.route('/upload_video', methods=['POST'])
 def upload_video():
